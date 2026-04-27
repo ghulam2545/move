@@ -8,7 +8,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
 
@@ -30,6 +33,11 @@ public class LocationController {
     public ResponseEntity<Set<NearByDriverResponse>> getNearbyDrivers(@RequestBody @Valid NearByDriverRequest nearByDriverRequest) {
         Set<NearByDriverResponse> drivers = locationService.getNearbyDrivers(nearByDriverRequest);
         return ResponseEntity.ok(drivers);
+    }
+
+    public ResponseEntity<String> removeDriver(@RequestBody @Valid String driverId) {
+        locationService.removeDriver(driverId);
+        return ResponseEntity.ok("Driver [%s] has been removed successfully.".formatted(driverId));
     }
 
 }

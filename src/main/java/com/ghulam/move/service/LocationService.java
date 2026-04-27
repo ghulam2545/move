@@ -51,7 +51,7 @@ public class LocationService {
         );
 
         Set<NearByDriverResponse> nearByDrivers = new HashSet<>();
-        if (geoResults == null) {
+        if (geoResults != null) {
             geoResults.forEach(result -> {
                 RedisGeoCommands.GeoLocation<String> driver = result.getContent();
                 nearByDrivers.add(new NearByDriverResponse(
@@ -68,4 +68,9 @@ public class LocationService {
         return nearByDrivers;
     }
 
+    public void removeDriver(String driverId) {
+        log.info("Removing location for driver: {}", driverId);
+
+        redisTemplate.opsForGeo().remove(DRIVERS_REDIS_KEY, driverId);
+    }
 }
