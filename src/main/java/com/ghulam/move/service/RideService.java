@@ -7,6 +7,7 @@ import com.ghulam.move.entity.Ride;
 import com.ghulam.move.enums.RideStatus;
 import com.ghulam.move.kafka.RideRequestedEvent;
 import com.ghulam.move.repo.RideRepo;
+import com.ghulam.move.exception.RideNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -75,5 +76,15 @@ public class RideService {
                 ride.getRideStartedTimestamp(),
                 ride.getRideCompletedTimestamp()
         );
+    }
+
+    public RideResponse getRideById(String rideId) {
+        log.info("Getting ride for customer: {}", rideId);
+
+        Ride ride = rideRepo.findById(rideId).orElseThrow(
+                () -> new RideNotFoundException("Ride not found with id: " + rideId)
+        );
+
+        return getRideResponse(ride);
     }
 }

@@ -30,8 +30,9 @@ public class RideController {
     }
 
     @PostMapping(path = "/get")
-    public ResponseEntity<RideResponse> getRideById(@RequestBody @Valid String customerId) {
-        return null; // TODO
+    public ResponseEntity<RideResponse> getRideById(@RequestBody @Valid String rideId) {
+        RideResponse rideResponse = rideService.getRideById(rideId);
+        return ResponseEntity.ok(rideResponse);
     }
 
     @PostMapping(path = "/getAll")
