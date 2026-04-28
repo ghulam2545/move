@@ -37,21 +37,25 @@ public class RideController {
 
     @PostMapping(path = "/getAll")
     public ResponseEntity<Set<RideResponse>> getRidesByCustomerId(@RequestBody @Valid String customerId) {
-        return null; // TODO
+        Set<RideResponse> response = rideService.getRidesByCustomerId(customerId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(path = "/start")
-    public ResponseEntity<String> startRide(@RequestBody @Valid String rideId) {
-        return null; // TODO
+    public ResponseEntity<RideResponse> startRide(@RequestBody @Valid String rideId) {
+        RideResponse response = rideService.startRide(rideId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(path = "/complete")
-    public ResponseEntity<String> completeRide(@RequestBody @Valid String rideId) {
-        return null; // TODO
+    public ResponseEntity<RideResponse> completeRide(@RequestBody @Valid String rideId) {
+        RideResponse response = rideService.completeRide(rideId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(path = "/cancel")
-    public ResponseEntity<String> cancelRide(@RequestBody @Valid String rideId) {
-        return null; // TODO
+    public ResponseEntity<RideResponse> cancelRide(@RequestBody @Valid String rideId) {
+        RideResponse response = rideService.cancelRide(rideId);
+        return ResponseEntity.ok(response);
     }
 }

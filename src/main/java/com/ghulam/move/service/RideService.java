@@ -8,10 +8,14 @@ import com.ghulam.move.enums.RideStatus;
 import com.ghulam.move.kafka.RideRequestedEvent;
 import com.ghulam.move.repo.RideRepo;
 import com.ghulam.move.exception.RideNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -85,6 +89,61 @@ public class RideService {
                 () -> new RideNotFoundException("Ride not found with id: " + rideId)
         );
 
+        return getRideResponse(ride);
+    }
+
+    public Set<RideResponse> getRidesByCustomerId(@Valid String customerId) {
+        log.info("Getting rides for customer: {}", customerId);
+
+        return rideRepo.findByCustomerIdOrderByCreatedTimestampDesc(customerId)
+                .stream()
+                .map(this::getRideResponse)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    public RideResponse startRide(String rideId) {
+        log.info("Starting ride of Id: {}", rideId);
+
+        Ride ride = rideRepo.findById(rideId).orElseThrow(
+                () -> new RideNotFoundException("Ride not found with id: " + rideId)
+        );
+
+        if (ride.getStatus() != RideStatus.RIDE_ACCEPTED) {
+            throw new IllegalStateException("Ride cannot be started. status of the ride: " + ride.getStatus());
+        }
+
+        ride.setStatus(RideStatus.RIDE_ACCEPTED);
+        ride.setRideStartedTimestamp(LocalDateTime.now());
+        rideRepo.save(ride);
+        return getRideResponse(ride);
+    }
+
+    public RideResponse completeRide(String rideId) {
+        log.info("Completing ride of Id: {}", rideId);
+
+        Ride ride = rideRepo.findById(rideId).orElseThrow(
+                () -> new RideNotFoundException("Ride not found with id: " + rideId)
+        );
+
+        if (ride.getStatus() != RideStatus.RIDE_STARTED) {
+            throw new IllegalStateException("Ride cannot be completed. status of the ride: " + ride.getStatus());
+        }
+
+        ride.setStatus(RideStatus.RIDE_COMPLETED);
+        ride.setRideCompletedTimestamp(LocalDateTime.now());
+        rideRepo.save(ride);
+        return getRideResponse(ride);
+    }
+
+    public RideResponse cancelRide(String rideId) {
+        log.info("Canceling ride of Id: {}", rideId);
+
+        Ride ride = rideRepo.findById(rideId).orElseThrow(
+                () -> new RideNotFoundException("Ride not found with id: " + rideId)
+        );
+
+        ride.setStatus(RideStatus.RIDE_CANCELLED);
+        rideRepo.save(ride);
         return getRideResponse(ride);
     }
 }
