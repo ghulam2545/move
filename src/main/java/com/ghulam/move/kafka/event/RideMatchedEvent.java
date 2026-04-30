@@ -1,4 +1,4 @@
-package com.ghulam.move.kafka;
+package com.ghulam.move.kafka.event;
 
 public record RideMatchedEvent(
         String id,

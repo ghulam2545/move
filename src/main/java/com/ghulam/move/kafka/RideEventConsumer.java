@@ -1,6 +1,7 @@
 package com.ghulam.move.kafka;
 
 import com.ghulam.move.controller.KafkaStreamController;
+import com.ghulam.move.kafka.event.RideRequestedEvent;
 import com.ghulam.move.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

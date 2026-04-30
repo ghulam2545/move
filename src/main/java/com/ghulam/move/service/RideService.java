@@ -5,7 +5,7 @@ import com.ghulam.move.dtos.RideRequest;
 import com.ghulam.move.dtos.RideResponse;
 import com.ghulam.move.entity.Ride;
 import com.ghulam.move.enums.RideStatus;
-import com.ghulam.move.kafka.RideRequestedEvent;
+import com.ghulam.move.kafka.event.RideRequestedEvent;
 import com.ghulam.move.repo.RideRepo;
 import com.ghulam.move.exception.RideNotFoundException;
 import jakarta.validation.Valid;
