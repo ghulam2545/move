@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Move Demo</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: sans-serif; font-size: 13px; height: 100vh; display: flex; flex-direction: column; }
+
+        /* top nav */
+        #nav { padding: 8px 12px; border-bottom: 1px solid #ccc; background: #f8f8f8; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        #nav strong { font-size: 14px; margin-right: 4px; }
+        #nav button { padding: 5px 11px; border: 1px solid #bbb; border-radius: 3px; background: #fff; cursor: pointer; font-size: 12px; }
+        #nav button:hover { background: #eee; }
+        #nav button.active { background: #111; color: #fff; border-color: #111; }
+
+        /* main */
+        #main { display: flex; flex: 1; overflow: hidden; }
+
+        /* left */
+        #left { width: 640px; min-width: 180px; flex-shrink: 0; overflow-y: auto; }
+        #placeholder { padding: 40px 14px; color: #aaa; font-size: 12px; }
+        #form-area { padding: 14px; display: none; flex-direction: column; gap: 8px; }
+        #form-area h3 { font-size: 11px; color: #555; border-bottom: 1px solid #eee; padding-bottom: 6px; font-family: monospace; }
+        label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; }
+        input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 3px; font-size: 13px; }
+        input:focus { outline: none; border-color: #555; }
+        #submit-btn { padding: 8px; border: none; background: #111; color: #fff; border-radius: 3px; cursor: pointer; font-size: 13px; }
+        #submit-btn:hover { background: #333; }
+        #response { margin: 0 14px 14px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 3px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; max-height: 220px; overflow-y: auto; background: #fafafa; display: none; }
+        #response.ok  { border-color: green; color: green; }
+        #response.err { border-color: red;   color: red; }
+
+        /* divider */
+        #divider { width: 4px; background: #ddd; cursor: col-resize; flex-shrink: 0; }
+        #divider:hover, #divider.dragging { background: #888; }
+
+        /* kafka */
+        #right { flex: 1; min-width: 180px; display: flex; flex-direction: column; background: #1a1a1a; color: #ccc; overflow: hidden; }
+        #k-header { padding: 8px 12px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 8px; font-size: 12px; flex-shrink: 0; }
+        #k-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #555; }
+        #k-dot.live { background: #4a4; }
+        #k-title { flex: 1; }
+        #k-count { color: #555; font-size: 11px; }
+        #k-clear { font-size: 11px; padding: 2px 8px; background: transparent; border: 1px solid #444; color: #888; border-radius: 3px; cursor: pointer; }
+        #k-clear:hover { border-color: #f44; color: #f44; }
+        #k-feed { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+        #k-feed::-webkit-scrollbar { width: 3px; }
+        #k-feed::-webkit-scrollbar-thumb { background: #333; }
+        .kev { padding: 7px 9px; border: 1px solid #2a2a2a; border-left: 3px solid #444; border-radius: 3px; background: #111; }
+        .kev[data-t*="request"]  { border-left-color: #4a8af4; }
+        .kev[data-t*="start"]    { border-left-color: #4a4; }
+        .kev[data-t*="complet"]  { border-left-color: #a78bfa; }
+        .kev[data-t*="cancel"]   { border-left-color: #f44; }
+        .kev[data-t*="location"] { border-left-color: #fa0; }
+        .km { display: flex; gap: 8px; margin-bottom: 4px; font-size: 10px; }
+        .k-topic { color: #888; font-weight: bold; }
+        .kev[data-t*="request"]  .k-topic { color: #4a8af4; }
+        .kev[data-t*="start"]    .k-topic { color: #4a4; }
+        .kev[data-t*="complet"]  .k-topic { color: #c4b5fd; }
+        .kev[data-t*="cancel"]   .k-topic { color: #f44; }
+        .kev[data-t*="location"] .k-topic { color: #fa0; }
+        .k-ts { margin-left: auto; color: #444; }
+        .k-body { font-family: monospace; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-all; max-height: 80px; overflow-y: auto; }
+        #k-empty { color: #333; text-align: center; padding: 40px 0; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="nav">
+    <button onclick="show('request-ride',this)">Request Ride</button>
+    <button onclick="show('get-ride',this)">Get Ride</button>
+    <button onclick="show('get-all',this)">All Rides</button>
+    <button onclick="show('start',this)">Start Ride</button>
+    <button onclick="show('complete',this)">Complete Ride</button>
+    <button onclick="show('cancel',this)">Cancel Ride</button>
+    <button onclick="show('location',this)">Update Location</button>
+    <button onclick="show('nearby',this)">Nearby Drivers</button>
+</div>
+
+<div id="main">
+    <div id="left">
+        <div id="placeholder">← Select an action</div>
+        <div id="form-area"></div>
+        <pre id="response"></pre>
+    </div>
+
+    <div id="divider"></div>
+
+    <div id="right">
+        <div id="k-header">
+            <span id="k-dot"></span>
+            <span id="k-title">⚡ Kafka Events</span>
+            <span id="k-count">0 events</span>
+            <button id="k-clear" onclick="clearFeed()">clear</button>
+        </div>
+        <div id="k-feed"><div id="k-empty">📭 waiting for events…</div></div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const FORMS = {
+        'request-ride': {
+            title: 'POST /api/ride/request',
+            path: '/api/ride/request',
+            fields: [
+                { id: 'customerId',      label: 'Customer ID',       val: 'cust_001' },
+                { id: 'pickupLatitude',  label: 'Pickup Latitude',   val: '12.9716' },
+                { id: 'pickupLongitude', label: 'Pickup Longitude',  val: '77.5946' },
+                { id: 'pickupAddress',   label: 'Pickup Address',    val: 'MG Road, Bangalore' },
+                { id: 'dropLatitude',    label: 'Drop Latitude',     val: '13.1986' },
+                { id: 'dropLongitude',   label: 'Drop Longitude',    val: '77.7066' },
+                { id: 'dropAddress',     label: 'Drop Address',      val: 'Kempegowda Airport' },
+            ]
+        },
+        'get-ride': {
+            title: 'POST /api/ride/get',
+            path: '/api/ride/get',
+            fields: [{ id: 'rideId', label: 'Ride ID', val: '' }],
+            raw: true
+        },
+        'get-all': {
+            title: 'POST /api/ride/getAll',
+            path: '/api/ride/getAll',
+            fields: [{ id: 'customerId', label: 'Customer ID', val: 'cust_001' }],
+            raw: true
+        },
+        'start': {
+            title: 'POST /api/ride/start',
+            path: '/api/ride/start',
+            fields: [{ id: 'rideId', label: 'Ride ID', val: '' }],
+            raw: true
+        },
+        'complete': {
+            title: 'POST /api/ride/complete',
+            path: '/api/ride/complete',
+            fields: [{ id: 'rideId', label: 'Ride ID', val: '' }],
+            raw: true
+        },
+        'cancel': {
+            title: 'POST /api/ride/cancel',
+            path: '/api/ride/cancel',
+            fields: [{ id: 'rideId', label: 'Ride ID', val: '' }],
+            raw: true
+        },
+        'location': {
+            title: 'POST /api/driver/location',
+            path: '/api/driver/location',
+            fields: [
+                { id: 'driverId',  label: 'Driver ID',  val: 'drv_001' },
+                { id: 'latitude',  label: 'Latitude',   val: '12.9716' },
+                { id: 'longitude', label: 'Longitude',  val: '77.5946' },
+            ]
+        },
+        'nearby': {
+            title: 'POST /api/driver/nearby',
+            path: '/api/driver/nearby',
+            fields: [
+                { id: 'latitude',  label: 'Latitude',    val: '12.9716' },
+                { id: 'longitude', label: 'Longitude',   val: '77.5946' },
+                { id: 'radius',    label: 'Radius (km)', val: '5' },
+            ]
+        }
+    };
+
+    let activeDef = null;
+
+    function show(key, btn) {
+        activeDef = FORMS[key];
+        document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.getElementById('placeholder').style.display = 'none';
+        const res = document.getElementById('response');
+        res.style.display = 'none'; res.className = '';
+
+        const area = document.getElementById('form-area');
+        area.style.display = 'flex';
+        area.innerHTML =
+            `<h3>${activeDef.title}</h3>` +
+            activeDef.fields.map(f =>
+                `<div><label>${f.label}</label><input id="f-${f.id}" value="${f.val}" placeholder="${f.label}"/></div>`
+            ).join('') +
+            `<button id="submit-btn" onclick="submit()">Send →</button>`;
+    }
+
+    async function submit() {
+        if (!activeDef) return;
+        let body;
+        if (activeDef.raw) {
+            body = document.getElementById('f-' + activeDef.fields[0].id).value;
+        } else {
+            body = {};
+            activeDef.fields.forEach(f => {
+                const v = document.getElementById('f-' + f.id).value;
+                body[f.id] = (v !== '' && !isNaN(v)) ? Number(v) : v;
+            });
+        }
+
+        const res = document.getElementById('response');
+        res.style.display = 'block'; res.className = ''; res.textContent = 'Loading…';
+
+        try {
+            const r = await fetch(activeDef.path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const text = await r.text();
+            try { res.textContent = JSON.stringify(JSON.parse(text), null, 2); }
+            catch { res.textContent = text; }
+            res.className = r.ok ? 'ok' : 'err';
+        } catch(e) { res.textContent = e.message; res.className = 'err'; }
+    }
+
+    // drag resize
+    (function() {
+        const d = document.getElementById('divider'), l = document.getElementById('left');
+        let drag = false, sx = 0, sw = 0;
+        d.addEventListener('mousedown', e => { drag=true; sx=e.clientX; sw=l.offsetWidth; d.classList.add('dragging'); document.body.style.cssText='cursor:col-resize;user-select:none'; });
+        document.addEventListener('mousemove', e => { if(drag) l.style.width = Math.min(Math.max(sw+e.clientX-sx,180),window.innerWidth-180)+'px'; });
+        document.addEventListener('mouseup', () => { if(!drag)return; drag=false; d.classList.remove('dragging'); document.body.style.cssText=''; });
+    })();
+
+    // kafka SSE
+    let evCount = 0;
+    const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const pretty = t => { try{return JSON.stringify(JSON.parse(t),null,2);}catch{return t;} };
+
+    // function addEvent(ev) {
+    //     alert(JSON.stringify(ev, null, 2));
+    //     document.getElementById('k-empty')?.remove();
+    //     const feed = document.getElementById('k-feed');
+    //     const el = document.createElement('div');
+    //     el.className = 'kev'; el.dataset.t = ev;
+    //     el.innerHTML = `<div class="km"><span class="k-topic">${esc(ev)}</span><span class="k-ts">${esc(ev)}</span></div><pre class="k-body">${esc(pretty(ev))}</pre>`;
+    //     feed.appendChild(el); feed.scrollTop = feed.scrollHeight;
+    //     document.getElementById('k-count').textContent = ++evCount + ' event' + (evCount > 1 ? 's' : '');
+    // }
+
+    function addEvent(ev) {
+        console.log("EVENT:", ev); // better than alert
+
+        document.getElementById('k-empty')?.remove();
+
+        const feed = document.getElementById('k-feed');
+        if (!feed) {
+            console.error("k-feed not found");
+            return;
+        }
+
+        const el = document.createElement('div');
+        el.className = 'kev';
+
+        // Safe values
+        const topic = ev.topic || ev.event || "kafka-event";
+        const timestamp = ev.timestamp || new Date().toISOString();
+
+        // Convert object → string properly
+        const body = JSON.stringify(ev.data || ev.payload || ev, null, 2);
+
+        el.dataset.t = topic;
+
+        el.innerHTML = `
+        <div class="km">
+            <span class="k-topic">${esc(topic)}</span>
+            <span class="k-ts">${esc(timestamp)}</span>
+        </div>
+        <pre class="k-body">${esc(body)}</pre>
+    `;
+
+        feed.appendChild(el);
+        feed.scrollTop = feed.scrollHeight;
+
+        document.getElementById('k-count').textContent =
+            ++evCount + ' event' + (evCount > 1 ? 's' : '');
+    }
+
+    function clearFeed() {
+        document.getElementById('k-feed').innerHTML = '<div id="k-empty">📭 cleared</div>';
+        evCount = 0; document.getElementById('k-count').textContent = '0 events';
+    }
+
+    (function() {
+        const dot = document.getElementById('k-dot');
+        const es = new EventSource('/move/kafka-stream');
+        es.addEventListener('kafka-event', e => { try{addEvent(JSON.parse(e.data));}catch{} });
+        es.onopen  = () => dot.classList.add('live');
+        es.onerror = () => dot.classList.remove('live');
+    })();
+</script>
+</body>
+</html>
