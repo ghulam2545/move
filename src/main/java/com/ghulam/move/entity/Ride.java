@@ -1,6 +1,7 @@
 package com.ghulam.move.entity;
 
 import com.ghulam.move.enums.RideStatus;
+import com.ghulam.move.utils.UUIDGenerator;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +20,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public final class Ride {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @UUIDGenerator
     private String id;
     private String customerId;
     private String driverId;
