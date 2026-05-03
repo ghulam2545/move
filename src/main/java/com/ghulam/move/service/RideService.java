@@ -5,9 +5,9 @@ import com.ghulam.move.dtos.RideRequest;
 import com.ghulam.move.dtos.RideResponse;
 import com.ghulam.move.entity.Ride;
 import com.ghulam.move.enums.RideStatus;
+import com.ghulam.move.exception.RideNotFoundException;
 import com.ghulam.move.kafka.event.RideRequestedEvent;
 import com.ghulam.move.repo.RideRepo;
-import com.ghulam.move.exception.RideNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -145,5 +145,14 @@ public class RideService {
         ride.setStatus(RideStatus.RIDE_CANCELLED);
         rideRepo.save(ride);
         return getRideResponse(ride);
+    }
+
+    public Set<RideResponse> database() {
+        log.info("Getting all rides from database");
+
+        return rideRepo.findAll()
+                .stream()
+                .map(this::getRideResponse)
+                .collect(java.util.stream.Collectors.toSet());
     }
 }

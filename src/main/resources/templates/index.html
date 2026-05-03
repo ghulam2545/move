@@ -76,6 +76,7 @@
     <button onclick="show('cancel',this)">Cancel Ride</button>
     <button onclick="show('location',this)">Update Location</button>
     <button onclick="show('nearby',this)">Nearby Drivers</button>
+    <button onclick="show('database',this)">Database</button>
 </div>
 
 <div id="main">
@@ -160,6 +161,11 @@
                 { id: 'longitude', label: 'Longitude',   val: '77.5946' },
                 { id: 'radius',    label: 'Radius (km)', val: '5000' },
             ]
+        },
+        'database': {
+            title: 'POST /api/ride/database',
+            path: '/api/ride/database',
+            fields: []
         }
     };
 
@@ -187,14 +193,18 @@
     async function submit() {
         if (!activeDef) return;
         let body;
+        let headers = {};
         if (activeDef.raw) {
             body = document.getElementById('f-' + activeDef.fields[0].id).value;
+            headers['Content-Type'] = 'text/plain';
         } else {
             body = {};
             activeDef.fields.forEach(f => {
                 const v = document.getElementById('f-' + f.id).value;
                 body[f.id] = (v !== '' && !isNaN(v)) ? Number(v) : v;
             });
+            body = JSON.stringify(body);
+            headers['Content-Type'] = 'application/json';
         }
 
         const res = document.getElementById('response');
@@ -203,8 +213,8 @@
         try {
             const r = await fetch(activeDef.path, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                headers: headers,
+                body: body
             });
             const text = await r.text();
             try { res.textContent = JSON.stringify(JSON.parse(text), null, 2); }

@@ -58,4 +58,10 @@ public class RideController {
         RideResponse response = rideService.cancelRide(rideId);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping(path = "/database")
+    public ResponseEntity<Set<RideResponse>> database() {
+        Set<RideResponse> out = rideService.database();
+        return ResponseEntity.ok(out);
+    }
 }
