@@ -35,6 +35,7 @@ public class LocationController {
         return ResponseEntity.ok(drivers);
     }
 
+    @PostMapping(path = "/driver/remove")
     public ResponseEntity<String> removeDriver(@RequestBody @Valid String driverId) {
         locationService.removeDriver(driverId);
         return ResponseEntity.ok("Driver [%s] has been removed successfully.".formatted(driverId));
