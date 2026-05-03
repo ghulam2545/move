@@ -29,7 +29,7 @@ public class LocationController {
         return ResponseEntity.ok("Location of driver [%s] has been updated successfully.".formatted(driverLocationRequest.driverId()));
     }
 
-    @PostMapping(path = "/drivers/nearby")
+    @PostMapping(path = "/driver/nearby")
     public ResponseEntity<Set<NearByDriverResponse>> getNearbyDrivers(@RequestBody @Valid NearByDriverRequest nearByDriverRequest) {
         Set<NearByDriverResponse> drivers = locationService.getNearbyDrivers(nearByDriverRequest);
         return ResponseEntity.ok(drivers);
