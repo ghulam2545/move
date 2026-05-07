@@ -112,7 +112,7 @@ public class RideService {
             throw new IllegalStateException("Ride cannot be started. status of the ride: " + ride.getStatus());
         }
 
-        ride.setStatus(RideStatus.RIDE_ACCEPTED);
+        ride.setStatus(RideStatus.RIDE_STARTED);
         ride.setRideStartedTimestamp(LocalDateTime.now());
         rideRepo.save(ride);
         return getRideResponse(ride);
@@ -142,6 +142,10 @@ public class RideService {
                 () -> new RideNotFoundException("Ride not found with id: " + rideId)
         );
 
+        if (ride.getStatus() != RideStatus.RIDE_COMPLETED) {
+            throw new IllegalStateException("Ride cannot be cancelled. status of the ride: " + ride.getStatus());
+        }
+
         ride.setStatus(RideStatus.RIDE_CANCELLED);
         rideRepo.save(ride);
         return getRideResponse(ride);
@@ -154,5 +158,14 @@ public class RideService {
                 .stream()
                 .map(this::getRideResponse)
                 .collect(java.util.stream.Collectors.toSet());
+    }
+
+    public void updateRideWithDriver(String rideId, String driverId) {
+        Ride ride = rideRepo.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+
+        ride.setDriverId(driverId);
+        ride.setStatus(RideStatus.RIDE_ACCEPTED);
+        rideRepo.save(ride);
     }
 }
