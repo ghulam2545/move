@@ -74,7 +74,7 @@
     <button onclick="show('start',this)">Start Ride</button>
     <button onclick="show('complete',this)">Complete Ride</button>
     <button onclick="show('cancel',this)">Cancel Ride</button>
-    <button onclick="show('location',this)">Update Location</button>
+    <button onclick="show('update',this)">Update Location</button>
     <button onclick="show('nearby',this)">Nearby Drivers</button>
     <button onclick="show('database',this)">Database</button>
 </div>
@@ -144,9 +144,9 @@
             fields: [{ id: 'rideId', label: 'Ride ID', val: '' }],
             raw: true
         },
-        'location': {
-            title: 'POST /api/driver/location',
-            path: '/api/driver/location',
+        'update': {
+            title: 'POST /api/location/driver/update',
+            path: '/api/location/driver/update',
             fields: [
                 { id: 'driverId',  label: 'Driver ID',  val: 'drv_001' },
                 { id: 'latitude',  label: 'Latitude',   val: '12.9716' },
